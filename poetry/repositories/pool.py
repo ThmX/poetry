@@ -144,7 +144,8 @@ class Pool(BaseRepository):
         raise PackageNotFound("Package {} ({}) not found.".format(name, version))
 
     def find_packages(
-        self, dependency,
+        self,
+        dependency,
     ):
         repository = dependency.source_name
         if repository is not None:

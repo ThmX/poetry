@@ -10,10 +10,11 @@ from concurrent.futures import wait
 from pathlib import Path
 from subprocess import CalledProcessError
 
+from cleo.io.null_io import NullIO
+
 from poetry.core.packages.file_dependency import FileDependency
 from poetry.core.packages.utils.link import Link
 from poetry.core.pyproject.toml import PyProjectTOML
-from poetry.io.null_io import NullIO
 from poetry.utils._compat import decode
 from poetry.utils.env import EnvCommandError
 from poetry.utils.helpers import safe_rmtree
@@ -75,7 +76,7 @@ class Executor(object):
         return self._executed["uninstall"]
 
     def supports_fancy_output(self):  # type: () -> bool
-        return self._io.supports_ansi() and not self._dry_run
+        return self._io.output.is_decorated() and not self._dry_run
 
     def disable(self):
         self._enabled = False
@@ -160,7 +161,7 @@ class Executor(object):
 
         with self._lock:
             section = self._sections[id(operation)]
-            section.output.clear()
+            section.clear()
             section.write(line)
 
     def _execute_operation(self, operation):
@@ -209,13 +210,15 @@ class Executor(object):
                 raise KeyboardInterrupt
         except Exception as e:
             try:
-                from clikit.ui.components.exception_trace import ExceptionTrace
+                from cleo.ui.exception_trace import ExceptionTrace
 
                 if not self.supports_fancy_output():
                     io = self._io
                 else:
-                    message = "  <error>•</error> {message}: <error>Failed</error>".format(
-                        message=self.get_operation_message(operation, error=True),
+                    message = (
+                        "  <error>•</error> {message}: <error>Failed</error>".format(
+                            message=self.get_operation_message(operation, error=True),
+                        )
                     )
                     self._write(operation, message)
                     io = self._sections.get(id(operation), self._io)
@@ -252,7 +255,8 @@ class Executor(object):
                     "<fg=default;options=bold,dark>Skipped</> "
                     "<fg=default;options=dark>for the following reason:</> "
                     "<fg=default;options=bold,dark>{reason}</>".format(
-                        message=operation_message, reason=operation.skip_reason,
+                        message=operation_message,
+                        reason=operation.skip_reason,
                     ),
                 )
 
@@ -410,8 +414,10 @@ class Executor(object):
         return self._update(operation)
 
     def _execute_uninstall(self, operation):  # type: (Uninstall) -> None
-        message = "  <fg=blue;options=bold>•</> {message}: <info>Removing...</info>".format(
-            message=self.get_operation_message(operation),
+        message = (
+            "  <fg=blue;options=bold>•</> {message}: <info>Removing...</info>".format(
+                message=self.get_operation_message(operation),
+            )
         )
         self._write(operation, message)
 
@@ -433,8 +439,10 @@ class Executor(object):
             archive = self._download(operation)
 
         operation_message = self.get_operation_message(operation)
-        message = "  <fg=blue;options=bold>•</> {message}: <info>Installing...</info>".format(
-            message=operation_message,
+        message = (
+            "  <fg=blue;options=bold>•</> {message}: <info>Installing...</info>".format(
+                message=operation_message,
+            )
         )
         self._write(operation, message)
 
@@ -467,8 +475,10 @@ class Executor(object):
     def _prepare_file(self, operation):
         package = operation.package
 
-        message = "  <fg=blue;options=bold>•</> {message}: <info>Preparing...</info>".format(
-            message=self.get_operation_message(operation),
+        message = (
+            "  <fg=blue;options=bold>•</> {message}: <info>Preparing...</info>".format(
+                message=self.get_operation_message(operation),
+            )
         )
         self._write(operation, message)
 
@@ -486,8 +496,10 @@ class Executor(object):
         package = operation.package
         operation_message = self.get_operation_message(operation)
 
-        message = "  <fg=blue;options=bold>•</> {message}: <info>Building...</info>".format(
-            message=operation_message,
+        message = (
+            "  <fg=blue;options=bold>•</> {message}: <info>Building...</info>".format(
+                message=operation_message,
+            )
         )
         self._write(operation, message)
 
@@ -550,8 +562,10 @@ class Executor(object):
         package = operation.package
         operation_message = self.get_operation_message(operation)
 
-        message = "  <fg=blue;options=bold>•</> {message}: <info>Cloning...</info>".format(
-            message=operation_message,
+        message = (
+            "  <fg=blue;options=bold>•</> {message}: <info>Cloning...</info>".format(
+                message=operation_message,
+            )
         )
         self._write(operation, message)
 
@@ -613,18 +627,20 @@ class Executor(object):
         )
         wheel_size = response.headers.get("content-length")
         operation_message = self.get_operation_message(operation)
-        message = "  <fg=blue;options=bold>•</> {message}: <info>Downloading...</>".format(
-            message=operation_message,
+        message = (
+            "  <fg=blue;options=bold>•</> {message}: <info>Downloading...</>".format(
+                message=operation_message,
+            )
         )
         progress = None
         if self.supports_fancy_output():
             if wheel_size is None:
                 self._write(operation, message)
             else:
-                from clikit.ui.components.progress_bar import ProgressBar
+                from cleo.ui.progress_bar import ProgressBar
 
                 progress = ProgressBar(
-                    self._sections[id(operation)].output, max=int(wheel_size)
+                    self._sections[id(operation)], max=int(wheel_size)
                 )
                 progress.set_format(message + " <b>%percent%%</b>")
 

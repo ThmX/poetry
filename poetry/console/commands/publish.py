@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from cleo import option
+from cleo.helpers import option
 
 from .command import Command
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from clikit.io import NullIO
+from cleo.io.null_io import NullIO
 
 from poetry.core.packages import ProjectPackage
 from poetry.core.toml.file import TOMLFile
@@ -1824,7 +1824,12 @@ def test_installer_can_handle_old_lock_files(
         pool,
         config,
         installed=installed,
-        executor=Executor(MockEnv(version_info=(2, 7, 18)), pool, config, NullIO(),),
+        executor=Executor(
+            MockEnv(version_info=(2, 7, 18)),
+            pool,
+            config,
+            NullIO(),
+        ),
     )
     installer.use_executor()
 
@@ -1842,7 +1847,10 @@ def test_installer_can_handle_old_lock_files(
         config,
         installed=installed,
         executor=Executor(
-            MockEnv(version_info=(2, 7, 18), platform="win32"), pool, config, NullIO(),
+            MockEnv(version_info=(2, 7, 18), platform="win32"),
+            pool,
+            config,
+            NullIO(),
         ),
     )
     installer.use_executor()

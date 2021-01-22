@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from typing import List
 from typing import Optional
 
-from clikit.io import ConsoleIO
+from cleo.io.io import IO
 
 from poetry.core.packages import Package
 from poetry.core.packages.project_package import ProjectPackage
@@ -33,7 +33,7 @@ class Solver:
         pool,  # type: Pool
         installed,  # type: Repository
         locked,  # type: Repository
-        io,  # type: ConsoleIO
+        io,  # type: IO
         remove_untracked=False,  # type: bool
         provider=None,  # type: Optional[Provider]
     ):
@@ -188,7 +188,12 @@ class Solver:
                     operations.append(Uninstall(installed))
 
         return sorted(
-            operations, key=lambda o: (-o.priority, o.package.name, o.package.version,),
+            operations,
+            key=lambda o: (
+                -o.priority,
+                o.package.name,
+                o.package.version,
+            ),
         )
 
     def solve_in_compatibility_mode(self, overrides, use_latest=None):
@@ -343,7 +348,12 @@ def dfs_visit(node, back_edges, visited, sorted_nodes):
 
 class PackageNode(DFSNode):
     def __init__(
-        self, package, packages, previous=None, previous_dep=None, dep=None,
+        self,
+        package,
+        packages,
+        previous=None,
+        previous_dep=None,
+        dep=None,
     ):
         self.package = package
         self.packages = packages
