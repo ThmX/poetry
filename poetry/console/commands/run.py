@@ -1,3 +1,5 @@
+import sys
+
 from cleo import argument
 
 from .env_command import EnvCommand
@@ -35,9 +37,13 @@ class RunCommand(EnvCommand):
 
         module, callable_ = script.split(":")
 
-        src_in_sys_path = "sys.path.append('src'); " if self._module.is_in_src() else ""
+        # TODO Check during PR if this is necessary or if we can drop the whole block use of self._module
+        src_in_sys_path = ""
+        if hasattr(self, "_module") and self._module.is_in_src():
+            src_in_sys_path = "sys.path.append('src'); "
 
-        cmd = ["python", "-c"]
+        python_executable = sys.executable or "python"
+        cmd = [python_executable, "-c"]
 
         cmd += [
             "import sys; "

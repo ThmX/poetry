@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 
@@ -14,3 +16,18 @@ def patches(mocker, env):
 def test_run_passes_all_args(tester, env):
     tester.execute("python -V")
     assert [["python", "-V"]] == env.executed
+
+
+def test_run_script_uses_current_python_executable(tester, env):
+    status_code = tester.execute("foo")
+    assert status_code == 0
+    assert env.executed == [
+        [
+            sys.executable,
+            "-c",
+            "import sys; "
+            "from importlib import import_module; "
+            "sys.argv = ['foo']; "
+            "import_module('foo').bar()",
+        ]
+    ]
